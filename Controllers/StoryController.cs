@@ -2,6 +2,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using System.Text.Json;
 using TruyenAPI.Data;
 using TruyenAPI.Models;
 using TruyenAPI.Models.DTOs;
@@ -11,28 +13,33 @@ namespace TruyenAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
     public class StoryController : ControllerBase
     {
         private TruyenDbContext dbContext;
         private IStoryRepository storyRespository;
         private IMapper mapper;
+        private readonly ILogger<StoryController> logger;
 
-        public StoryController(TruyenDbContext dbContext, IStoryRepository storyRespository, IMapper mapper)
+        public StoryController(TruyenDbContext dbContext, IStoryRepository storyRespository, IMapper mapper, ILogger<StoryController> logger)
         {
             this.dbContext = dbContext;
             this.storyRespository = storyRespository;
             this.mapper = mapper;
+            this.logger = logger;
         }
 
         [HttpGet]
+        [Authorize(Roles = "Admin,User")]
         public async Task<IActionResult> GetAll(string? search)
         {
-            return Ok(await storyRespository.GetAllAsync(search));
+            var data = await storyRespository.GetAllAsync(search);
+            logger.LogInformation($"Data: {JsonSerializer.Serialize(data)}");
+            return Ok(data);
         }
 
         [HttpGet]
         [Route("{id:guid}")]
+        [Authorize(Roles = "Admin,User")]
         public async Task<IActionResult> Get(Guid id)
         {
             var story = await storyRespository.GetAsync(id);
@@ -41,6 +48,7 @@ namespace TruyenAPI.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Create(StoryDTO storyAdd)
         {
             Story? story = await storyRespository.CreateAsync(storyAdd);
@@ -50,6 +58,7 @@ namespace TruyenAPI.Controllers
 
         [HttpPut]
         [Route("{id:guid}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Update(Guid id ,StoryDTO storyDTO)
         {
             var story = await storyRespository.UpdateAsync(id, storyDTO);
@@ -59,6 +68,7 @@ namespace TruyenAPI.Controllers
 
         [HttpDelete]
         [Route("{id:guid}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(Guid id)
         {
             Story? story = await storyRespository.DeleteAsync(id);

@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using TruyenAPI.Models.DTOs;
+using TruyenAPI.Repositories.User;
 
 namespace TruyenAPI.Controllers
 {
@@ -10,10 +11,12 @@ namespace TruyenAPI.Controllers
     public class RegisterController : ControllerBase
     {
         private readonly UserManager<IdentityUser> user;
+        private readonly IUserRespository token;
 
-        public RegisterController(UserManager<IdentityUser> user)
+        public RegisterController(UserManager<IdentityUser> user, IUserRespository token)
         {
             this.user = user;
+            this.token = token;
         }
 
         [HttpPost("Register")]
@@ -45,7 +48,11 @@ namespace TruyenAPI.Controllers
                 if (checkPass)
                 {
                     var role = await user.GetRolesAsync(userLog);
-                    return Ok($"Welcome {role[0]}");
+                    if (role != null)
+                    {
+                        var crtoken = token.CreateJwtToken(userLog, role.ToList());
+                        return Ok(crtoken + "\n" + $"Xin chao {role[0]}");
+                    }
                 }
             }
             return BadRequest("Wrong user or password");

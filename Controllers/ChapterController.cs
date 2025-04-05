@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
 using TruyenAPI.Models;
@@ -21,12 +22,14 @@ namespace TruyenAPI.Controllers
         }
 
         [HttpGet]
+        [Authorize(Roles = "Admin,User")]
         public async Task<IActionResult> GetAll()
         {
             return Ok(await respository.GetAllAsync());
         }
 
         [HttpGet("{id:guid}")]
+        [Authorize(Roles = "Admin,User")]
         public async Task<IActionResult> Get(Guid id)
         {
             Chapter chapter = await respository.GetByIdAsync(id);
@@ -34,12 +37,14 @@ namespace TruyenAPI.Controllers
             return Ok(chapter);
         }
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Create(ChapterDTO chapterDTO)
         {
             ChapterDTO chapter = await respository.CreateAsync(chapterDTO);
             return Ok(chapter);
         }
         [HttpPut("{id:guid}")]
+        [Authorize( Roles = "Admin")]
         public async Task<IActionResult> Update(Guid id, ChapterDTO chapterDTO)
         {
             Chapter chapter = await respository.UpdateAsync(id, chapterDTO);
@@ -47,6 +52,7 @@ namespace TruyenAPI.Controllers
             return Ok(chapter);
         }
         [HttpDelete("{id:guid}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(Guid id)
         {
             Chapter chapter = await respository.DeleteAsync(id);
